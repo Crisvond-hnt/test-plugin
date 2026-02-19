@@ -103,6 +103,23 @@ Shows trust-context classification scaffold for owner/group/agent-room behavior.
 /context-status --dm false --owner false --agentsOnly true --count 3
 ```
 
+### `/approval-phrase` (M1 scaffold)
+
+Parses/consumes approval phrases.
+
+```text
+/approval-phrase APPROVE TX ABCD --actor-user-id towns:user:abc
+/approval-phrase REJECT TX ABCD --actor-user-id towns:user:abc
+```
+
+### `/journal`
+
+Reads recent audit events from the local Towns Agent OS journal.
+
+```text
+/journal --limit 30
+```
+
 ## Install
 
 From a local checkout:

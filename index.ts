@@ -9,6 +9,8 @@ import { registerPolicyStatusCommand } from './src/policy-status-command.js'
 import { registerPolicySetCommand } from './src/policy-set-command.js'
 import { registerApprovalCommand } from './src/approval-command.js'
 import { registerContextStatusCommand } from './src/context-status-command.js'
+import { registerJournalCommand } from './src/journal-command.js'
+import { registerApprovalPhraseCommand } from './src/approval-phrase-command.js'
 
 const pluginConfigSchema = {
   type: 'object',
@@ -136,7 +138,9 @@ const plugin = {
     registerPolicyStatusCommand(api)
     registerPolicySetCommand(api)
     registerApprovalCommand(api)
+    registerApprovalPhraseCommand(api)
     registerContextStatusCommand(api)
+    registerJournalCommand(api)
   },
 }
 
