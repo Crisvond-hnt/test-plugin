@@ -1,0 +1,50 @@
+{
+  "id": "openclaw-towns-plugin",
+  "name": "Towns",
+  "description": "Towns channel plugin (MVP)",
+  "channels": ["towns"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {
+      "channels": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "towns": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "appPrivateData": { "type": "string", "minLength": 1 },
+              "jwtSecret": { "type": "string", "minLength": 1 },
+              "webhookPath": { "type": "string", "minLength": 1 },
+              "allowFrom": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "accounts": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "enabled": { "type": "boolean" },
+                    "name": { "type": "string" },
+                    "appPrivateData": { "type": "string", "minLength": 1 },
+                    "jwtSecret": { "type": "string", "minLength": 1 },
+                    "webhookPath": { "type": "string", "minLength": 1 },
+                    "allowFrom": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

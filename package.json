@@ -1,0 +1,32 @@
+{
+  "name": "@crisvond/openclaw-towns-plugin",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "main": "index.ts",
+  "packageManager": "npm@10.9.4",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "check": "npm run build"
+  },
+  "dependencies": {
+    "@towns-labs/agent": "^2.0.13"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.2.9"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "@types/node": "^20.14.8"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}
