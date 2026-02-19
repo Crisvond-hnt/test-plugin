@@ -114,7 +114,16 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
 
       const ownerAllowed = isOwnerUser(cfg, args.actorUserId, args.accountId)
       if (!ownerAllowed) {
-        return { text: `❌ denied: actor ${args.actorUserId} is not listed in policy.allowedOwnerUserIds.` }
+        const denied = {
+          allow: false,
+          reasonCode: 'DENY_NOT_OWNER',
+          accountId: args.accountId,
+          actorUserId: args.actorUserId,
+          action: 'policy_set',
+          at: new Date().toISOString(),
+        }
+        console.info('[towns][policy]', JSON.stringify(denied))
+        return { text: `❌ denied (${denied.reasonCode}): actor ${args.actorUserId} is not listed in policy.allowedOwnerUserIds.` }
       }
 
       if (args.maxPerTxUsd !== undefined && (!Number.isFinite(args.maxPerTxUsd) || args.maxPerTxUsd < 0)) {
@@ -126,6 +135,21 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
 
       const next = buildNextConfig(cfg, args)
       await api.runtime.config.writeConfigFile(next)
+
+      console.info(
+        '[towns][policy]',
+        JSON.stringify({
+          allow: true,
+          reasonCode: 'ALLOW',
+          accountId: args.accountId,
+          actorUserId: args.actorUserId,
+          action: 'policy_set',
+          mode: args.mode,
+          maxPerTxUsd: args.maxPerTxUsd,
+          maxPerDayUsd: args.maxPerDayUsd,
+          at: new Date().toISOString(),
+        }),
+      )
 
       const changes: string[] = []
       if (args.mode) changes.push(`mode=${args.mode}`)

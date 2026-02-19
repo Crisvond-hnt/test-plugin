@@ -23,6 +23,40 @@
                 "type": "array",
                 "items": { "type": "string" }
               },
+              "policy": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": ["READ_ONLY", "CONFIRM_ALWAYS", "BOUNDED_AUTO"]
+                  },
+                  "allowedOwnerUserIds": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "limits": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "properties": {
+                      "maxPerTxUsd": { "type": "number", "minimum": 0 },
+                      "maxPerDayUsd": { "type": "number", "minimum": 0 }
+                    }
+                  },
+                  "integrations": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "properties": {
+                        "enabled": { "type": "boolean" },
+                        "execEnabled": { "type": "boolean" },
+                        "payEnabled": { "type": "boolean" }
+                      }
+                    }
+                  }
+                }
+              },
               "accounts": {
                 "type": "object",
                 "additionalProperties": {
@@ -37,6 +71,40 @@
                     "allowFrom": {
                       "type": "array",
                       "items": { "type": "string" }
+                    },
+                    "policy": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "properties": {
+                        "mode": {
+                          "type": "string",
+                          "enum": ["READ_ONLY", "CONFIRM_ALWAYS", "BOUNDED_AUTO"]
+                        },
+                        "allowedOwnerUserIds": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "limits": {
+                          "type": "object",
+                          "additionalProperties": true,
+                          "properties": {
+                            "maxPerTxUsd": { "type": "number", "minimum": 0 },
+                            "maxPerDayUsd": { "type": "number", "minimum": 0 }
+                          }
+                        },
+                        "integrations": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "properties": {
+                              "enabled": { "type": "boolean" },
+                              "execEnabled": { "type": "boolean" },
+                              "payEnabled": { "type": "boolean" }
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }

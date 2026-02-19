@@ -84,6 +84,15 @@ Owner-gated policy mutation helper.
 /policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N]
 ```
 
+### `/approval` (M1 scaffold)
+
+Creates/lists approval requests for nonce-based execution flow scaffolding.
+
+```text
+/approval --op create --account default --action executeTx --requested-by towns:user:abc --payload-hash sha256:...
+/approval --op list
+```
+
 ## Install
 
 From a local checkout:
