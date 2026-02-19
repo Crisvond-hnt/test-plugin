@@ -58,6 +58,12 @@ function parseArgs(raw?: string): Parsed {
   }
 }
 
+function resolveActorUserId(ctx: PluginCommandContext, parsedActor?: string): string | undefined {
+  if (parsedActor?.trim()) return parsedActor.trim()
+  const anyCtx = ctx as unknown as { userId?: string; senderId?: string; from?: string }
+  return anyCtx.userId ?? anyCtx.senderId ?? anyCtx.from
+}
+
 function buildNextConfig(cfg: OpenClawConfig, input: Parsed): OpenClawConfig {
   const channels = (cfg.channels ?? {}) as Record<string, unknown>
   const towns = (channels.towns ?? {}) as Record<string, unknown>
@@ -130,20 +136,21 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
       }
 
       const cfg = api.runtime.config.loadConfig()
+      const actorUserId = resolveActorUserId(ctx, args.actorUserId)
 
-      if (!args.actorUserId) {
+      if (!actorUserId) {
         return {
-          text: '❌ owner-gated command: pass --actor-user-id <towns:user:...> to apply policy changes.',
+          text: '❌ owner-gated command: actor identity missing. Pass --actor-user-id <towns:user:...>.',
         }
       }
 
-      const ownerAllowed = isOwnerUser(cfg, args.actorUserId, args.accountId)
+      const ownerAllowed = isOwnerUser(cfg, actorUserId, args.accountId)
       if (!ownerAllowed) {
         const denied = {
           allow: false,
           reasonCode: 'DENY_NOT_OWNER',
           accountId: args.accountId,
-          actorUserId: args.actorUserId,
+          actorUserId: actorUserId,
           action: 'policy_set',
           at: new Date().toISOString(),
         }
@@ -157,7 +164,7 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
           status: 'DENY',
           reasonCode: denied.reasonCode,
         })
-        return { text: `❌ denied (${denied.reasonCode}): actor ${args.actorUserId} is not listed in policy.allowedOwnerUserIds.` }
+        return { text: `❌ denied (${denied.reasonCode}): actor ${actorUserId} is not listed in policy.allowedOwnerUserIds.` }
       }
 
       if (args.maxPerTxUsd !== undefined && (!Number.isFinite(args.maxPerTxUsd) || args.maxPerTxUsd < 0)) {
@@ -174,7 +181,7 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
         allow: true,
         reasonCode: 'ALLOW',
         accountId: args.accountId,
-        actorUserId: args.actorUserId,
+        actorUserId: actorUserId,
         action: 'policy_set',
         mode: args.mode,
         maxPerTxUsd: args.maxPerTxUsd,
@@ -210,7 +217,7 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
         changes.push(`integration.${args.integration}.enabled=${args.integrationEnabled}`)
 
       return {
-        text: `✅ policy updated for account=${args.accountId} by ${args.actorUserId}\n- ${changes.join('\n- ')}`,
+        text: `✅ policy updated for account=${args.accountId} by ${actorUserId}\n- ${changes.join('\n- ')}`,
       }
     },
   })

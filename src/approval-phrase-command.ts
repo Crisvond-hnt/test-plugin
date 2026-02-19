@@ -1,5 +1,5 @@
 import type { OpenClawPluginApi, PluginCommandContext } from 'openclaw/plugin-sdk'
-import { consumeApprovalByNonce } from './approval-store.js'
+import { consumeApprovalByNonce, rejectApprovalByNonce } from './approval-store.js'
 import { writeJournalEvent } from './execution-journal.js'
 
 function parsePhrase(raw?: string): { op?: 'approve' | 'reject'; nonce?: string; actor?: string } {
@@ -37,16 +37,21 @@ export function registerApprovalPhraseCommand(api: OpenClawPluginApi) {
       const actor = parsed.actor ?? 'unknown'
 
       if (parsed.op === 'reject') {
+        const result = rejectApprovalByNonce({ nonce: parsed.nonce, actorUserId: actor })
         writeJournalEvent({
           at: new Date().toISOString(),
+          accountId: result.request?.accountId,
           actorUserId: actor,
           category: 'approval',
           action: 'phrase_reject',
-          status: 'DENY',
-          reasonCode: 'REJECTED_BY_USER',
-          details: { nonce: parsed.nonce },
+          status: result.ok ? 'SUCCESS' : 'DENY',
+          reasonCode: result.ok ? 'ALLOW' : result.reasonCode,
+          details: { nonce: parsed.nonce, requestId: result.request?.id },
         })
-        return { text: `✅ rejected approval nonce=${parsed.nonce}` }
+        if (!result.ok) {
+          return { text: `❌ reject denied (${result.reasonCode})` }
+        }
+        return { text: `✅ rejected approval nonce=${parsed.nonce} status=${result.request?.status}` }
       }
 
       const result = consumeApprovalByNonce({ nonce: parsed.nonce, actorUserId: actor })

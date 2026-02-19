@@ -84,6 +84,8 @@ Owner-gated policy mutation helper.
 /policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false]
 ```
 
+If `--actor-user-id` is omitted, command attempts to use runtime sender identity.
+
 ### `/approval` (M1 scaffold)
 
 Creates/lists approval requests for nonce-based execution flow scaffolding.
