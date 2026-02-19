@@ -68,6 +68,14 @@ Shows secret-safe diagnostics:
 - webhook paths
 - allowFrom counts
 
+### `/capabilities`
+
+Shows runtime capability snapshot (wallet context, policy mode, integration readiness).
+
+### `/policy-status`
+
+Shows owner/policy status (mode, owner count, limits, integration toggles).
+
 ## Install
 
 From a local checkout:

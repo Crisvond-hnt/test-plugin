@@ -5,6 +5,7 @@ import { handleTownsWebhookRequest } from './src/monitor.js'
 import { setTownsRuntime } from './src/runtime.js'
 import { registerTownsHealthCommand } from './src/health-command.js'
 import { registerCapabilitiesCommand } from './src/capabilities-command.js'
+import { registerPolicyStatusCommand } from './src/policy-status-command.js'
 
 const pluginConfigSchema = {
   type: 'object',
@@ -67,6 +68,7 @@ const plugin = {
     registerConnectTownsCommand(api)
     registerTownsHealthCommand(api)
     registerCapabilitiesCommand(api)
+    registerPolicyStatusCommand(api)
   },
 }
 
