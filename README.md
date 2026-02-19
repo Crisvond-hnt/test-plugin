@@ -81,7 +81,7 @@ Shows owner/policy status (mode, owner count, limits, integration toggles).
 Owner-gated policy mutation helper.
 
 ```text
-/policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N]
+/policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false]
 ```
 
 ### `/approval` (M1 scaffold)
@@ -90,6 +90,7 @@ Creates/lists approval requests for nonce-based execution flow scaffolding.
 
 ```text
 /approval --op create --account default --action executeTx --requested-by towns:user:abc --payload-hash sha256:...
+/approval --op consume --nonce ABCD --actor-user-id towns:user:abc
 /approval --op list
 ```
 

@@ -1,6 +1,7 @@
 import type { OpenClawConfig, OpenClawPluginApi, PluginCommandContext } from 'openclaw/plugin-sdk'
 import { DEFAULT_ACCOUNT_ID } from './accounts.js'
 import { isOwnerUser } from './owner-policy.js'
+import { writeJournalEvent } from './execution-journal.js'
 
 type Parsed = {
   accountId: string
@@ -8,6 +9,8 @@ type Parsed = {
   mode?: 'READ_ONLY' | 'CONFIRM_ALWAYS' | 'BOUNDED_AUTO'
   maxPerTxUsd?: number
   maxPerDayUsd?: number
+  integration?: 'polymarket' | 'registry8004' | 'x402'
+  integrationEnabled?: boolean
 }
 
 function parseArgs(raw?: string): Parsed {
@@ -36,12 +39,22 @@ function parseArgs(raw?: string): Parsed {
   const maxPerTxUsd = out['max-per-tx-usd'] !== undefined ? Number(out['max-per-tx-usd']) : undefined
   const maxPerDayUsd = out['max-per-day-usd'] !== undefined ? Number(out['max-per-day-usd']) : undefined
 
+  const integrationRaw = String(out.integration ?? '').toLowerCase()
+  const integration =
+    integrationRaw === 'polymarket' || integrationRaw === 'registry8004' || integrationRaw === 'x402'
+      ? (integrationRaw as Parsed['integration'])
+      : undefined
+  const integrationEnabled =
+    out['integration-enabled'] !== undefined ? String(out['integration-enabled']).toLowerCase() === 'true' : undefined
+
   return {
     accountId: out.account ?? DEFAULT_ACCOUNT_ID,
     actorUserId: out['actor-user-id'],
     mode,
     maxPerTxUsd,
     maxPerDayUsd,
+    integration,
+    integrationEnabled,
   }
 }
 
@@ -52,6 +65,8 @@ function buildNextConfig(cfg: OpenClawConfig, input: Parsed): OpenClawConfig {
   const account = (accounts[input.accountId] ?? {}) as Record<string, unknown>
   const policy = (account.policy ?? (towns.policy as Record<string, unknown> | undefined) ?? {}) as Record<string, unknown>
   const limits = (policy.limits ?? {}) as Record<string, unknown>
+
+  const integrations = (policy.integrations ?? {}) as Record<string, Record<string, unknown>>
 
   const nextPolicy: Record<string, unknown> = {
     ...policy,
@@ -65,6 +80,16 @@ function buildNextConfig(cfg: OpenClawConfig, input: Parsed): OpenClawConfig {
         ? { maxPerDayUsd: input.maxPerDayUsd }
         : {}),
     },
+    integrations:
+      input.integration && input.integrationEnabled !== undefined
+        ? {
+            ...integrations,
+            [input.integration]: {
+              ...(integrations[input.integration] ?? {}),
+              enabled: input.integrationEnabled,
+            },
+          }
+        : integrations,
   }
 
   return {
@@ -100,7 +125,7 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
 
       if (!args.mode && args.maxPerTxUsd === undefined && args.maxPerDayUsd === undefined) {
         return {
-          text: 'Usage: /policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N]',
+          text: 'Usage: /policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false]',
         }
       }
 
@@ -123,6 +148,15 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
           at: new Date().toISOString(),
         }
         console.info('[towns][policy]', JSON.stringify(denied))
+        writeJournalEvent({
+          at: denied.at,
+          accountId: denied.accountId,
+          actorUserId: denied.actorUserId,
+          category: 'policy',
+          action: denied.action,
+          status: 'DENY',
+          reasonCode: denied.reasonCode,
+        })
         return { text: `❌ denied (${denied.reasonCode}): actor ${args.actorUserId} is not listed in policy.allowedOwnerUserIds.` }
       }
 
@@ -136,25 +170,44 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
       const next = buildNextConfig(cfg, args)
       await api.runtime.config.writeConfigFile(next)
 
-      console.info(
-        '[towns][policy]',
-        JSON.stringify({
-          allow: true,
-          reasonCode: 'ALLOW',
-          accountId: args.accountId,
-          actorUserId: args.actorUserId,
-          action: 'policy_set',
-          mode: args.mode,
-          maxPerTxUsd: args.maxPerTxUsd,
-          maxPerDayUsd: args.maxPerDayUsd,
-          at: new Date().toISOString(),
-        }),
-      )
+      const allowEvent = {
+        allow: true,
+        reasonCode: 'ALLOW',
+        accountId: args.accountId,
+        actorUserId: args.actorUserId,
+        action: 'policy_set',
+        mode: args.mode,
+        maxPerTxUsd: args.maxPerTxUsd,
+        maxPerDayUsd: args.maxPerDayUsd,
+        integration: args.integration,
+        integrationEnabled: args.integrationEnabled,
+        at: new Date().toISOString(),
+      }
+
+      console.info('[towns][policy]', JSON.stringify(allowEvent))
+      writeJournalEvent({
+        at: allowEvent.at,
+        accountId: allowEvent.accountId,
+        actorUserId: allowEvent.actorUserId,
+        category: 'policy',
+        action: allowEvent.action,
+        status: 'ALLOW',
+        reasonCode: allowEvent.reasonCode,
+        details: {
+          mode: allowEvent.mode,
+          maxPerTxUsd: allowEvent.maxPerTxUsd,
+          maxPerDayUsd: allowEvent.maxPerDayUsd,
+          integration: allowEvent.integration,
+          integrationEnabled: allowEvent.integrationEnabled,
+        },
+      })
 
       const changes: string[] = []
       if (args.mode) changes.push(`mode=${args.mode}`)
       if (args.maxPerTxUsd !== undefined) changes.push(`maxPerTxUsd=${args.maxPerTxUsd}`)
       if (args.maxPerDayUsd !== undefined) changes.push(`maxPerDayUsd=${args.maxPerDayUsd}`)
+      if (args.integration && args.integrationEnabled !== undefined)
+        changes.push(`integration.${args.integration}.enabled=${args.integrationEnabled}`)
 
       return {
         text: `✅ policy updated for account=${args.accountId} by ${args.actorUserId}\n- ${changes.join('\n- ')}`,

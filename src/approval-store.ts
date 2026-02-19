@@ -55,6 +55,34 @@ export function getApprovalRequest(id: string): ApprovalRequest | undefined {
   return req
 }
 
+export function consumeApprovalByNonce(input: { nonce: string; actorUserId: string }): {
+  ok: boolean
+  reasonCode: 'ALLOW' | 'DENY_NOT_FOUND' | 'DENY_EXPIRED' | 'DENY_NOT_REQUESTER' | 'DENY_ALREADY_CONSUMED'
+  request?: ApprovalRequest
+} {
+  const now = Date.now()
+  const req = [...approvals.values()].find((item) => item.nonce === input.nonce)
+  if (!req) return { ok: false, reasonCode: 'DENY_NOT_FOUND' }
+
+  if (req.status !== 'PENDING') {
+    return { ok: false, reasonCode: 'DENY_ALREADY_CONSUMED', request: req }
+  }
+
+  if (req.expiresAt <= now) {
+    req.status = 'EXPIRED'
+    approvals.set(req.id, req)
+    return { ok: false, reasonCode: 'DENY_EXPIRED', request: req }
+  }
+
+  if (req.requestedBy !== input.actorUserId) {
+    return { ok: false, reasonCode: 'DENY_NOT_REQUESTER', request: req }
+  }
+
+  req.status = 'APPROVED'
+  approvals.set(req.id, req)
+  return { ok: true, reasonCode: 'ALLOW', request: req }
+}
+
 export function listApprovals(limit = 20): ApprovalRequest[] {
   const items = [...approvals.values()]
     .sort((a, b) => b.createdAt - a.createdAt)
