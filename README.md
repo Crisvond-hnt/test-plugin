@@ -93,6 +93,15 @@ Creates/lists approval requests for nonce-based execution flow scaffolding.
 /approval --op list
 ```
 
+### `/context-status` (M1 scaffold)
+
+Shows trust-context classification scaffold for owner/group/agent-room behavior.
+
+```text
+/context-status --dm true --owner true
+/context-status --dm false --owner false --agentsOnly true --count 3
+```
+
 ## Install
 
 From a local checkout:
