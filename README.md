@@ -76,6 +76,14 @@ Shows runtime capability snapshot (wallet context, policy mode, integration read
 
 Shows owner/policy status (mode, owner count, limits, integration toggles).
 
+### `/policy-set`
+
+Owner-gated policy mutation helper.
+
+```text
+/policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N]
+```
+
 ## Install
 
 From a local checkout:

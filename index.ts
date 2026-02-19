@@ -6,6 +6,7 @@ import { setTownsRuntime } from './src/runtime.js'
 import { registerTownsHealthCommand } from './src/health-command.js'
 import { registerCapabilitiesCommand } from './src/capabilities-command.js'
 import { registerPolicyStatusCommand } from './src/policy-status-command.js'
+import { registerPolicySetCommand } from './src/policy-set-command.js'
 
 const pluginConfigSchema = {
   type: 'object',
@@ -69,6 +70,7 @@ const plugin = {
     registerTownsHealthCommand(api)
     registerCapabilitiesCommand(api)
     registerPolicyStatusCommand(api)
+    registerPolicySetCommand(api)
   },
 }
 
