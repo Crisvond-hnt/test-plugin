@@ -1,5 +1,6 @@
 import type { OpenClawPluginApi, PluginCommandContext } from 'openclaw/plugin-sdk'
 import { getCapabilitySnapshot } from './capabilities.js'
+import { evaluatePolicyAction } from './policy-engine.js'
 
 function parseAccountId(raw?: string): string | undefined {
   const tokens = (raw ?? '').match(/(?:"[^"]*"|'[^']*'|\S+)/g) ?? []
@@ -24,6 +25,17 @@ export function registerCapabilitiesCommand(api: OpenClawPluginApi) {
       const cfg = api.runtime.config.loadConfig()
       const c = getCapabilitySnapshot(cfg, accountId)
 
+      const execDecision = evaluatePolicyAction({
+        capability: c,
+        kind: 'executeTx',
+        integration: 'polymarket',
+      })
+      const payDecision = evaluatePolicyAction({
+        capability: c,
+        kind: 'pay',
+        integration: 'x402',
+      })
+
       const lines = [
         'Towns capability snapshot (secret-safe):',
         '',
@@ -40,6 +52,10 @@ export function registerCapabilitiesCommand(api: OpenClawPluginApi) {
         `- polymarket: ready=${c.integrations.polymarket.ready} execEnabled=${c.integrations.polymarket.execEnabled}`,
         `- registry8004: ready=${c.integrations.registry8004.ready}`,
         `- x402: ready=${c.integrations.x402.ready} payEnabled=${c.integrations.x402.payEnabled}`,
+        '',
+        'policy decisions:',
+        `- executeTx(polymarket): allow=${execDecision.allow} reason=${execDecision.reasonCode}`,
+        `- pay(x402): allow=${payDecision.allow} reason=${payDecision.reasonCode}`,
       ]
 
       return { text: lines.join('\n') }
