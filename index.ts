@@ -11,6 +11,7 @@ import { registerApprovalCommand } from './src/approval-command.js'
 import { registerContextStatusCommand } from './src/context-status-command.js'
 import { registerJournalCommand } from './src/journal-command.js'
 import { registerApprovalPhraseCommand } from './src/approval-phrase-command.js'
+import { registerIntentCommand } from './src/intent-command.js'
 
 const pluginConfigSchema = {
   type: 'object',
@@ -141,6 +142,7 @@ const plugin = {
     registerApprovalPhraseCommand(api)
     registerContextStatusCommand(api)
     registerJournalCommand(api)
+    registerIntentCommand(api)
   },
 }
 

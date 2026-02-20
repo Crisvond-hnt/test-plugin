@@ -124,6 +124,13 @@ Reads recent audit events from the local Towns Agent OS journal.
 /journal --limit 30
 ```
 
+### `/intent` (M1 scaffold)
+
+Parses natural-language input into a structured intent category.
+
+```text
+/intent increase polymarket limit to 100 per day
+```
 ## Install
 
 From a local checkout:
