@@ -1,6 +1,8 @@
 import type { OpenClawPluginApi, PluginCommandContext } from 'openclaw/plugin-sdk'
 import { parseIntent } from './intent-router.js'
 import { writeJournalEvent } from './execution-journal.js'
+import { getCapabilitySnapshot } from './capabilities.js'
+import { evaluatePolicyAction } from './policy-engine.js'
 
 export function registerIntentCommand(api: OpenClawPluginApi) {
   api.registerCommand({
@@ -13,6 +15,14 @@ export function registerIntentCommand(api: OpenClawPluginApi) {
       if (!raw) return { text: 'Usage: /intent <message>' }
 
       const parsed = parseIntent(raw)
+      const cfg = api.runtime.config.loadConfig()
+      const cap = getCapabilitySnapshot(cfg)
+      let policyPreview = 'n/a'
+      if (parsed.intent === 'policy_toggle_integration' || parsed.intent === 'policy_set_mode' || parsed.intent === 'policy_set_limits') {
+        const d = evaluatePolicyAction({ capability: cap, kind: 'executeTx', integration: 'polymarket' })
+        policyPreview = `${d.allow ? 'ALLOW' : 'DENY'}:${d.reasonCode}`
+      }
+
       writeJournalEvent({
         at: new Date().toISOString(),
         category: 'intent',
@@ -27,6 +37,7 @@ export function registerIntentCommand(api: OpenClawPluginApi) {
           `- intent: ${parsed.intent}`,
           `- confidence: ${parsed.confidence}`,
           `- params: ${JSON.stringify(parsed.params)}`,
+          `- policyPreview: ${policyPreview}`,
         ].join('\n'),
       }
     },

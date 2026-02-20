@@ -131,6 +131,15 @@ Parses natural-language input into a structured intent category.
 ```text
 /intent increase polymarket limit to 100 per day
 ```
+
+### `/policy-check`
+
+Evaluates current policy decision for an action/integration.
+
+```text
+/policy-check --kind executeTx --integration polymarket
+/policy-check --kind pay --integration x402
+```
 ## Install
 
 From a local checkout:
