@@ -11,6 +11,8 @@ type Parsed = {
   maxPerDayUsd?: number
   integration?: 'polymarket' | 'registry8004' | 'x402'
   integrationEnabled?: boolean
+  ownerAdd?: string
+  ownerRemove?: string
 }
 
 function parseArgs(raw?: string): Parsed {
@@ -55,6 +57,8 @@ function parseArgs(raw?: string): Parsed {
     maxPerDayUsd,
     integration,
     integrationEnabled,
+    ownerAdd: out['owner-add'],
+    ownerRemove: out['owner-remove'],
   }
 }
 
@@ -73,10 +77,15 @@ function buildNextConfig(cfg: OpenClawConfig, input: Parsed): OpenClawConfig {
   const limits = (policy.limits ?? {}) as Record<string, unknown>
 
   const integrations = (policy.integrations ?? {}) as Record<string, Record<string, unknown>>
+  const existingOwners = (policy.allowedOwnerUserIds ?? []) as string[]
+  const ownerSet = new Set(existingOwners.map((v) => String(v)))
+  if (input.ownerAdd?.trim()) ownerSet.add(input.ownerAdd.trim())
+  if (input.ownerRemove?.trim()) ownerSet.delete(input.ownerRemove.trim())
 
   const nextPolicy: Record<string, unknown> = {
     ...policy,
     ...(input.mode ? { mode: input.mode } : {}),
+    allowedOwnerUserIds: [...ownerSet],
     limits: {
       ...limits,
       ...(typeof input.maxPerTxUsd === 'number' && Number.isFinite(input.maxPerTxUsd)
@@ -129,9 +138,9 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
         return { text: '❌ invalid account id format' }
       }
 
-      if (!args.mode && args.maxPerTxUsd === undefined && args.maxPerDayUsd === undefined) {
+      if (!args.mode && args.maxPerTxUsd === undefined && args.maxPerDayUsd === undefined && args.integrationEnabled === undefined && !args.ownerAdd && !args.ownerRemove) {
         return {
-          text: 'Usage: /policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false]',
+          text: 'Usage: /policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false] [--owner-add towns:user:...] [--owner-remove towns:user:...]',
         }
       }
 
@@ -174,6 +183,10 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
         return { text: '❌ max-per-day-usd must be a non-negative number.' }
       }
 
+      if (args.ownerAdd && args.ownerRemove && args.ownerAdd.trim() === args.ownerRemove.trim()) {
+        return { text: '❌ owner-add and owner-remove cannot target the same user in one command.' }
+      }
+
       const next = buildNextConfig(cfg, args)
       await api.runtime.config.writeConfigFile(next)
 
@@ -188,6 +201,8 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
         maxPerDayUsd: args.maxPerDayUsd,
         integration: args.integration,
         integrationEnabled: args.integrationEnabled,
+        ownerAdd: args.ownerAdd,
+        ownerRemove: args.ownerRemove,
         at: new Date().toISOString(),
       }
 
@@ -206,6 +221,8 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
           maxPerDayUsd: allowEvent.maxPerDayUsd,
           integration: allowEvent.integration,
           integrationEnabled: allowEvent.integrationEnabled,
+          ownerAdd: allowEvent.ownerAdd,
+          ownerRemove: allowEvent.ownerRemove,
         },
       })
 
@@ -215,6 +232,8 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
       if (args.maxPerDayUsd !== undefined) changes.push(`maxPerDayUsd=${args.maxPerDayUsd}`)
       if (args.integration && args.integrationEnabled !== undefined)
         changes.push(`integration.${args.integration}.enabled=${args.integrationEnabled}`)
+      if (args.ownerAdd) changes.push(`ownerAdd=${args.ownerAdd}`)
+      if (args.ownerRemove) changes.push(`ownerRemove=${args.ownerRemove}`)
 
       return {
         text: `✅ policy updated for account=${args.accountId} by ${actorUserId}\n- ${changes.join('\n- ')}`,

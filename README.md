@@ -81,7 +81,7 @@ Shows owner/policy status (mode, owner count, limits, integration toggles).
 Owner-gated policy mutation helper.
 
 ```text
-/policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false]
+/policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false] [--owner-add towns:user:...] [--owner-remove towns:user:...]
 ```
 
 If `--actor-user-id` is omitted, command attempts to use runtime sender identity.
@@ -113,6 +113,8 @@ Parses/consumes approval phrases.
 /approval-phrase APPROVE TX ABCD --actor-user-id towns:user:abc
 /approval-phrase REJECT TX ABCD --actor-user-id towns:user:abc
 ```
+
+If `--actor-user-id` is omitted, command attempts to use runtime sender identity.
 
 ### `/journal`
 

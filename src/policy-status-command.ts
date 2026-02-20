@@ -29,6 +29,7 @@ export function registerPolicyStatusCommand(api: OpenClawPluginApi) {
         `- account: ${p.accountId}`,
         `- mode: ${p.mode}`,
         `- ownerCount: ${p.ownerUserIds.length}`,
+        `- owners: ${p.ownerUserIds.length > 0 ? p.ownerUserIds.slice(0, 5).join(', ') : 'none'}`,
         `- maxPerTxUsd: ${p.limits.maxPerTxUsd ?? 'unset'}`,
         `- maxPerDayUsd: ${p.limits.maxPerDayUsd ?? 'unset'}`,
         '',

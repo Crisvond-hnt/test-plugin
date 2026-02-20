@@ -20,6 +20,12 @@ function parsePhrase(raw?: string): { op?: 'approve' | 'reject'; nonce?: string;
   return {}
 }
 
+function resolveActorUserId(ctx: PluginCommandContext, parsedActor?: string): string | undefined {
+  if (parsedActor?.trim()) return parsedActor.trim()
+  const anyCtx = ctx as unknown as { userId?: string; senderId?: string; from?: string }
+  return anyCtx.userId ?? anyCtx.senderId ?? anyCtx.from
+}
+
 export function registerApprovalPhraseCommand(api: OpenClawPluginApi) {
   api.registerCommand({
     name: 'approval-phrase',
@@ -34,7 +40,8 @@ export function registerApprovalPhraseCommand(api: OpenClawPluginApi) {
         }
       }
 
-      const actor = parsed.actor ?? 'unknown'
+      const actor = resolveActorUserId(ctx, parsed.actor)
+      if (!actor) return { text: '❌ actor identity missing. Pass --actor-user-id <towns:user:...>.' }
 
       if (parsed.op === 'reject') {
         const result = rejectApprovalByNonce({ nonce: parsed.nonce, actorUserId: actor })
