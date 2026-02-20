@@ -11,6 +11,8 @@ type Parsed = {
   maxPerDayUsd?: number
   integration?: 'polymarket' | 'registry8004' | 'x402'
   integrationEnabled?: boolean
+  integrationExecEnabled?: boolean
+  integrationPayEnabled?: boolean
   ownerAdd?: string
   ownerRemove?: string
 }
@@ -48,6 +50,14 @@ function parseArgs(raw?: string): Parsed {
       : undefined
   const integrationEnabled =
     out['integration-enabled'] !== undefined ? String(out['integration-enabled']).toLowerCase() === 'true' : undefined
+  const integrationExecEnabled =
+    out['integration-exec-enabled'] !== undefined
+      ? String(out['integration-exec-enabled']).toLowerCase() === 'true'
+      : undefined
+  const integrationPayEnabled =
+    out['integration-pay-enabled'] !== undefined
+      ? String(out['integration-pay-enabled']).toLowerCase() === 'true'
+      : undefined
 
   return {
     accountId: out.account ?? DEFAULT_ACCOUNT_ID,
@@ -57,6 +67,8 @@ function parseArgs(raw?: string): Parsed {
     maxPerDayUsd,
     integration,
     integrationEnabled,
+    integrationExecEnabled,
+    integrationPayEnabled,
     ownerAdd: out['owner-add'],
     ownerRemove: out['owner-remove'],
   }
@@ -101,7 +113,9 @@ function buildNextConfig(cfg: OpenClawConfig, input: Parsed): OpenClawConfig {
             ...integrations,
             [input.integration]: {
               ...(integrations[input.integration] ?? {}),
-              enabled: input.integrationEnabled,
+              ...(input.integrationEnabled !== undefined ? { enabled: input.integrationEnabled } : {}),
+              ...(input.integrationExecEnabled !== undefined ? { execEnabled: input.integrationExecEnabled } : {}),
+              ...(input.integrationPayEnabled !== undefined ? { payEnabled: input.integrationPayEnabled } : {}),
             },
           }
         : integrations,
@@ -138,9 +152,9 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
         return { text: '❌ invalid account id format' }
       }
 
-      if (!args.mode && args.maxPerTxUsd === undefined && args.maxPerDayUsd === undefined && args.integrationEnabled === undefined && !args.ownerAdd && !args.ownerRemove) {
+      if (!args.mode && args.maxPerTxUsd === undefined && args.maxPerDayUsd === undefined && args.integrationEnabled === undefined && args.integrationExecEnabled === undefined && args.integrationPayEnabled === undefined && !args.ownerAdd && !args.ownerRemove) {
         return {
-          text: 'Usage: /policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false] [--owner-add towns:user:...] [--owner-remove towns:user:...]',
+          text: 'Usage: /policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false --integration-exec-enabled true|false --integration-pay-enabled true|false] [--owner-add towns:user:...] [--owner-remove towns:user:...]',
         }
       }
 
@@ -201,6 +215,8 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
         maxPerDayUsd: args.maxPerDayUsd,
         integration: args.integration,
         integrationEnabled: args.integrationEnabled,
+        integrationExecEnabled: args.integrationExecEnabled,
+        integrationPayEnabled: args.integrationPayEnabled,
         ownerAdd: args.ownerAdd,
         ownerRemove: args.ownerRemove,
         at: new Date().toISOString(),
@@ -221,6 +237,8 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
           maxPerDayUsd: allowEvent.maxPerDayUsd,
           integration: allowEvent.integration,
           integrationEnabled: allowEvent.integrationEnabled,
+          integrationExecEnabled: allowEvent.integrationExecEnabled,
+          integrationPayEnabled: allowEvent.integrationPayEnabled,
           ownerAdd: allowEvent.ownerAdd,
           ownerRemove: allowEvent.ownerRemove,
         },
@@ -232,6 +250,10 @@ export function registerPolicySetCommand(api: OpenClawPluginApi) {
       if (args.maxPerDayUsd !== undefined) changes.push(`maxPerDayUsd=${args.maxPerDayUsd}`)
       if (args.integration && args.integrationEnabled !== undefined)
         changes.push(`integration.${args.integration}.enabled=${args.integrationEnabled}`)
+      if (args.integration && args.integrationExecEnabled !== undefined)
+        changes.push(`integration.${args.integration}.execEnabled=${args.integrationExecEnabled}`)
+      if (args.integration && args.integrationPayEnabled !== undefined)
+        changes.push(`integration.${args.integration}.payEnabled=${args.integrationPayEnabled}`)
       if (args.ownerAdd) changes.push(`ownerAdd=${args.ownerAdd}`)
       if (args.ownerRemove) changes.push(`ownerRemove=${args.ownerRemove}`)
 
