@@ -68,6 +68,78 @@ Shows secret-safe diagnostics:
 - webhook paths
 - allowFrom counts
 
+### `/capabilities`
+
+Shows runtime capability snapshot (wallet context, policy mode, integration readiness).
+
+### `/policy-status`
+
+Shows owner/policy status (mode, owner count, limits, integration toggles).
+
+### `/policy-set`
+
+Owner-gated policy mutation helper.
+
+```text
+/policy-set --actor-user-id <towns:user:...> [--account default] [--mode READ_ONLY|CONFIRM_ALWAYS|BOUNDED_AUTO] [--max-per-tx-usd N] [--max-per-day-usd N] [--integration polymarket|registry8004|x402 --integration-enabled true|false --integration-exec-enabled true|false --integration-pay-enabled true|false] [--owner-add towns:user:...] [--owner-remove towns:user:...]
+```
+
+If `--actor-user-id` is omitted, command attempts to use runtime sender identity.
+
+### `/approval` (M1 scaffold)
+
+Creates/lists approval requests for nonce-based execution flow scaffolding.
+
+```text
+/approval --op create --account default --action executeTx --requested-by towns:user:abc --payload-hash sha256:...
+/approval --op consume --nonce ABCD --actor-user-id towns:user:abc
+/approval --op list
+```
+
+### `/context-status` (M1 scaffold)
+
+Shows trust-context classification scaffold for owner/group/agent-room behavior.
+
+```text
+/context-status --dm true --owner true
+/context-status --dm false --owner false --agentsOnly true --count 3
+```
+
+### `/approval-phrase` (M1 scaffold)
+
+Parses/consumes approval phrases.
+
+```text
+/approval-phrase APPROVE TX ABCD --actor-user-id towns:user:abc
+/approval-phrase REJECT TX ABCD --actor-user-id towns:user:abc
+```
+
+If `--actor-user-id` is omitted, command attempts to use runtime sender identity.
+
+### `/journal`
+
+Reads recent audit events from the local Towns Agent OS journal.
+
+```text
+/journal --limit 30
+```
+
+### `/intent` (M1 scaffold)
+
+Parses natural-language input into a structured intent category.
+
+```text
+/intent increase polymarket limit to 100 per day
+```
+
+### `/policy-check`
+
+Evaluates current policy decision for an action/integration.
+
+```text
+/policy-check --kind executeTx --integration polymarket
+/policy-check --kind pay --integration x402
+```
 ## Install
 
 From a local checkout:

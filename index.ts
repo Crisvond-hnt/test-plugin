@@ -4,6 +4,15 @@ import { registerConnectTownsCommand } from './src/connect-command.js'
 import { handleTownsWebhookRequest } from './src/monitor.js'
 import { setTownsRuntime } from './src/runtime.js'
 import { registerTownsHealthCommand } from './src/health-command.js'
+import { registerCapabilitiesCommand } from './src/capabilities-command.js'
+import { registerPolicyStatusCommand } from './src/policy-status-command.js'
+import { registerPolicySetCommand } from './src/policy-set-command.js'
+import { registerApprovalCommand } from './src/approval-command.js'
+import { registerContextStatusCommand } from './src/context-status-command.js'
+import { registerJournalCommand } from './src/journal-command.js'
+import { registerApprovalPhraseCommand } from './src/approval-phrase-command.js'
+import { registerIntentCommand } from './src/intent-command.js'
+import { registerPolicyCheckCommand } from './src/policy-check-command.js'
 
 const pluginConfigSchema = {
   type: 'object',
@@ -25,6 +34,37 @@ const pluginConfigSchema = {
               type: 'array',
               items: { type: 'string' },
             },
+            policy: {
+              type: 'object',
+              additionalProperties: true,
+              properties: {
+                mode: { type: 'string', enum: ['READ_ONLY', 'CONFIRM_ALWAYS', 'BOUNDED_AUTO'] },
+                allowedOwnerUserIds: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                limits: {
+                  type: 'object',
+                  additionalProperties: true,
+                  properties: {
+                    maxPerTxUsd: { type: 'number', minimum: 0 },
+                    maxPerDayUsd: { type: 'number', minimum: 0 },
+                  },
+                },
+                integrations: {
+                  type: 'object',
+                  additionalProperties: {
+                    type: 'object',
+                    additionalProperties: true,
+                    properties: {
+                      enabled: { type: 'boolean' },
+                      execEnabled: { type: 'boolean' },
+                      payEnabled: { type: 'boolean' },
+                    },
+                  },
+                },
+              },
+            },
             accounts: {
               type: 'object',
               additionalProperties: {
@@ -39,6 +79,37 @@ const pluginConfigSchema = {
                   allowFrom: {
                     type: 'array',
                     items: { type: 'string' },
+                  },
+                  policy: {
+                    type: 'object',
+                    additionalProperties: true,
+                    properties: {
+                      mode: { type: 'string', enum: ['READ_ONLY', 'CONFIRM_ALWAYS', 'BOUNDED_AUTO'] },
+                      allowedOwnerUserIds: {
+                        type: 'array',
+                        items: { type: 'string' },
+                      },
+                      limits: {
+                        type: 'object',
+                        additionalProperties: true,
+                        properties: {
+                          maxPerTxUsd: { type: 'number', minimum: 0 },
+                          maxPerDayUsd: { type: 'number', minimum: 0 },
+                        },
+                      },
+                      integrations: {
+                        type: 'object',
+                        additionalProperties: {
+                          type: 'object',
+                          additionalProperties: true,
+                          properties: {
+                            enabled: { type: 'boolean' },
+                            execEnabled: { type: 'boolean' },
+                            payEnabled: { type: 'boolean' },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },
@@ -65,6 +136,15 @@ const plugin = {
     api.registerHttpHandler(handleTownsWebhookRequest)
     registerConnectTownsCommand(api)
     registerTownsHealthCommand(api)
+    registerCapabilitiesCommand(api)
+    registerPolicyStatusCommand(api)
+    registerPolicySetCommand(api)
+    registerApprovalCommand(api)
+    registerApprovalPhraseCommand(api)
+    registerContextStatusCommand(api)
+    registerJournalCommand(api)
+    registerIntentCommand(api)
+    registerPolicyCheckCommand(api)
   },
 }
 
